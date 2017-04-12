@@ -1,15 +1,18 @@
 #pragma once
-
+#include <string>
+using namespace std;
 struct Vertex {
 	float position[3];
 	float uv[2];
 	float normal[3];
 };
 
+
 class Mesh {
 public:
 	Vertex* vertices;
 	int vertexCount = 0;
+	string texturePath;
 
 	~Mesh() {
 		if (vertexCount != 0) {

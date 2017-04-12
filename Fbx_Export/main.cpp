@@ -49,6 +49,7 @@ int main() {
 							FbxVector4 position = mesh->GetControlPointAt(array[i])+ meshPos;
 							FbxVector4 lNormal = mesh->GetElementNormal()->GetDirectArray().GetAt(i);
 							FbxVector2 uv = mesh->GetElementUV()->GetDirectArray().GetAt(array[i]);
+							
 
 							data.meshes[data.meshCount - 1].vertices[i].position[0] = position[0];
 							data.meshes[data.meshCount - 1].vertices[i].position[1] = position[1];
@@ -61,7 +62,17 @@ int main() {
 
 							cout << position[0] << ", " << position[1] << ", " << position[2] << endl;
 							cout << uv[0] << ", " << uv[1] << endl;
-							cout << lNormal[0] << ", " << lNormal[1] << ", " << lNormal[2] << endl << endl;
+							cout << lNormal[0] << ", " << lNormal[1] << ", " << lNormal[2] << endl;
+
+
+							FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)node->GetSrcObject<FbxSurfaceMaterial>(0);
+
+							FbxProperty prop = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
+							
+						
+							FbxFileTexture* texture = FbxCast<FbxFileTexture>(prop.GetSrcObject<FbxFileTexture>(0));
+
+							cout << texture->GetRelativeFileName() << endl;
 							
 						}
 						getchar();
