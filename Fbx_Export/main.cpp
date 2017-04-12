@@ -41,6 +41,30 @@ int main() {
 					if (mesh->IsTriangleMesh()) {
 						data.AddMesh(1);
 						data.meshes[data.meshCount - 1].addVertex(mesh->GetPolygonVertexCount());
+						FbxVector4 meshPos = node->LclTranslation;
+						int* array = mesh->GetPolygonVertices();
+
+						for (int i = 0; i < mesh->GetPolygonVertexCount(); i++)
+						{
+							FbxVector4 position = mesh->GetControlPointAt(array[i])+ meshPos;
+							FbxVector4 lNormal = mesh->GetElementNormal()->GetDirectArray().GetAt(i);
+							FbxVector2 uv = mesh->GetElementUV()->GetDirectArray().GetAt(array[i]);
+
+							data.meshes[data.meshCount - 1].vertices[i].position[0] = position[0];
+							data.meshes[data.meshCount - 1].vertices[i].position[1] = position[1];
+							data.meshes[data.meshCount - 1].vertices[i].position[2] = position[2];
+							data.meshes[data.meshCount - 1].vertices[i].uv[0] = uv[0];
+							data.meshes[data.meshCount - 1].vertices[i].uv[1] = uv[1];
+							data.meshes[data.meshCount - 1].vertices[i].normal[0] = lNormal[0];
+							data.meshes[data.meshCount - 1].vertices[i].normal[1] = lNormal[1];
+							data.meshes[data.meshCount - 1].vertices[i].normal[2] = lNormal[2];
+
+							cout << position[0] << ", " << position[1] << ", " << position[2] << endl;
+							cout << uv[0] << ", " << uv[1] << endl;
+							cout << lNormal[0] << ", " << lNormal[1] << ", " << lNormal[2] << endl << endl;
+							
+						}
+						getchar();
 					}
 				}
 			}

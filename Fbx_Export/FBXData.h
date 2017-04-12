@@ -11,8 +11,14 @@ public:
 	Vertex* vertices;
 	int vertexCount = 0;
 
+	~Mesh() {
+		if (vertexCount != 0) {
+			delete[] vertices;
+		}
+	}
+
 	void addVertex(int count) {
-		Vertex* newA = new Vertex[vertexCount + 1];
+		Vertex* newA = new Vertex[vertexCount + count];
 
 		for (int vertex = 0; vertex < vertexCount; vertex++) {
 			newA[vertex] = vertices[vertex];
@@ -22,7 +28,7 @@ public:
 		}
 
 		vertices = newA;
-		vertexCount++;
+		vertexCount += count;
 	}
 };
 
