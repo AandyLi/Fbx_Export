@@ -124,6 +124,19 @@ int main() {
 						if (mesh->IsTriangleMesh()) {
 							data.meshes[meshId].AllocateVertices(mesh->GetPolygonVertexCount());
 
+							if ((node->FindProperty("0", false)).IsValid()) {
+								data.meshes[meshId].customAttribute = 0;
+							}
+							else if ((node->FindProperty("1", false)).IsValid()) {
+								data.meshes[meshId].customAttribute = 1;
+							}
+							else if ((node->FindProperty("2", false)).IsValid()) {
+								data.meshes[meshId].customAttribute = 2;
+							}
+							else if ((node->FindProperty("3", false)).IsValid()) {
+								data.meshes[meshId].customAttribute = 3;
+							}
+
 							FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)node->GetSrcObject<FbxSurfaceMaterial>(0);
 							FbxProperty property = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
 							FbxFileTexture* texture = (FbxFileTexture*)property.GetSrcObject<FbxFileTexture>(0);

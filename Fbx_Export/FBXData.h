@@ -14,6 +14,12 @@ public:
 	int vertexCount = 0;
 	string texturePath;
 
+	// 0 - Not a Bounding Box
+	// 1 - Above ground Bounding Box
+	// 2 - Below ground Bounding Box
+	// 3 - Above and Below ground Bounding Box
+	int customAttribute = 0;
+
 	Mesh() {}
 	virtual ~Mesh() {
 		if (vertexCount != 0) {
