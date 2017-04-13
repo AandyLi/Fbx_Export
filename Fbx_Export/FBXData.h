@@ -14,23 +14,15 @@ public:
 	int vertexCount = 0;
 	string texturePath;
 
-	~Mesh() {
+	Mesh() {}
+	virtual ~Mesh() {
 		if (vertexCount != 0) {
 			delete[] vertices;
 		}
 	}
 
-	void addVertex(int count) {
-		Vertex* newA = new Vertex[vertexCount + count];
-
-		for (int vertex = 0; vertex < vertexCount; vertex++) {
-			newA[vertex] = vertices[vertex];
-		}
-		if (vertexCount != 0) {
-			delete[] vertices;
-		}
-
-		vertices = newA;
+	void AllocateVertices (int count) {
+		vertices = new Vertex[count];
 		vertexCount += count;
 	}
 };
@@ -41,7 +33,7 @@ public:
 	int meshCount = 0;
 
 	FBXData();
-	~FBXData();
+	virtual ~FBXData();
 
-	void AddMesh(int);
+	void AllocateMeshes(int);
 };

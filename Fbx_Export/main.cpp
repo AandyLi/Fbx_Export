@@ -13,7 +13,7 @@ int main() {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	FBXData data;
-	const char** files;
+	char** files;
 	int fileCount = 0;
 	float** meshOffsets;
 
@@ -22,10 +22,10 @@ int main() {
 		string line;
 		while (getline(inFile, line)) {
 			if (line.substr(0, 5) == "Load:") {
-				while (getline(inFile, line) && line.substr(line.find_last_of(".") + 1, 3) == "fbx") {
-					if (line[0] != '#') {
+				while (getline(inFile, line) && line.substr(0, 17) != "Position Offsets:") {
+					if (line[0] != '#' && line.substr(line.find_last_of(".") + 1, 3) == "fbx") {
 						{
-							const char** newA = new const char*[fileCount + 1];
+							char** newA = new char*[fileCount + 1];
 							for (int file = 0; file < fileCount; file++) {
 								newA[file] = files[file];
 							}
@@ -35,7 +35,11 @@ int main() {
 							files = newA;
 							fileCount++;
 						}
-						files[fileCount - 1] = line.c_str();
+						files[fileCount - 1] = new char[line.length() + 1];
+						for (int letter = 0; letter < line.length(); letter++) {
+							files[fileCount - 1][letter] = line[letter];
+						}
+						files[fileCount - 1][line.length()] = '\0';
 					}
 				}
 			}
@@ -47,7 +51,7 @@ int main() {
 				meshOffsets[offset][0] = 0; meshOffsets[offset][1] = 0; meshOffsets[offset][2] = 0;
 			}
 			if (line.substr(0, 17) == "Position Offsets:") {
-				for (int offset = 0; offset < fileCount && getline(inFile, line) && line[0] != '#' && line[0] != ' ' && line != ""; offset++) {
+				for (int offset = 0; offset < fileCount && getline(inFile, line) && line[0] != '#' && line[0] != ' ' && line != "" && line.substr(0, 5) != "Load:"; offset++) {
 					float x = stof(line.substr(0, line.find_first_of(' ')));
 					float y = stof(line.substr(line.find_first_of(' ') + 1, line.find_last_of(' ')));
 					float z = stof(line.substr(line.find_last_of(' ') + 1));
@@ -62,6 +66,41 @@ int main() {
 	FbxIOSettings* ioSettings = FbxIOSettings::Create(manager, IOSROOT);
 	manager->SetIOSettings(ioSettings);
 
+	int meshCount = 0;
+	{
+		for (int file = 0; file < fileCount; file++) {
+			FbxImporter* importer = FbxImporter::Create(manager, "");
+			if (!importer->Initialize(files[file], -1, manager->GetIOSettings())) {
+				printf("Call to FbxImporter::Initialize() failed.\n");
+				printf("Error returned: %s\n\n", importer->GetStatus().GetErrorString());
+				getchar();
+				exit(-1);
+			}
+
+			FbxScene* scene = FbxScene::Create(manager, "scene");
+			importer->Import(scene);
+			importer->Destroy();
+
+			FbxNode* rootNode = scene->GetRootNode();
+			if (rootNode) {
+				for (int child = 0; child < rootNode->GetChildCount(); child++) {
+					FbxNode* node = rootNode->GetChild(child);
+					for (int attribute = 0; attribute < node->GetNodeAttributeCount(); attribute++) {
+						if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eMesh) {
+							FbxMesh* mesh = node->GetMesh();
+							if (mesh->IsTriangleMesh()) {
+								meshCount++;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	data.AllocateMeshes(meshCount);
+
+	int meshId = 0;
 	for (int file = 0; file < fileCount; file++) {
 		FbxImporter* importer = FbxImporter::Create(manager, "");
 		if (!importer->Initialize(files[file], -1, manager->GetIOSettings())) {
@@ -83,32 +122,32 @@ int main() {
 					if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eMesh) {
 						FbxMesh* mesh = node->GetMesh();
 						if (mesh->IsTriangleMesh()) {
-							data.AddMesh(1);
-							data.meshes[data.meshCount - 1].addVertex(mesh->GetPolygonVertexCount());
+							data.meshes[meshId].AllocateVertices(mesh->GetPolygonVertexCount());
 
 							FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)node->GetSrcObject<FbxSurfaceMaterial>(0);
 							FbxProperty property = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
 							FbxFileTexture* texture = (FbxFileTexture*)property.GetSrcObject<FbxFileTexture>(0);
-							data.meshes[data.meshCount - 1].texturePath = texture->GetRelativeFileName();
+							data.meshes[meshId].texturePath = texture->GetRelativeFileName();
 
 							FbxDouble3 meshPos = node->LclTranslation;
 							int* vertexIndices = mesh->GetPolygonVertices();
 							for (int vertex = 0; vertex < mesh->GetPolygonVertexCount(); vertex++) {
 								FbxVector4 position = mesh->GetControlPointAt(vertexIndices[vertex]);
 								position[0] += meshPos[0]; position[1] += meshPos[1]; position[2] += meshPos[2];
-								data.meshes[data.meshCount - 1].vertices[vertex].position[0] = position[0] + meshOffsets[file][0];
-								data.meshes[data.meshCount - 1].vertices[vertex].position[1] = position[1] + meshOffsets[file][1];
-								data.meshes[data.meshCount - 1].vertices[vertex].position[2] = position[2] + meshOffsets[file][2];
+								data.meshes[meshId].vertices[vertex].position[0] = position[0] + meshOffsets[file][0];
+								data.meshes[meshId].vertices[vertex].position[1] = position[1] + meshOffsets[file][1];
+								data.meshes[meshId].vertices[vertex].position[2] = position[2] + meshOffsets[file][2];
 
 								FbxVector2 uv = mesh->GetElementUV()->GetDirectArray().GetAt(vertexIndices[vertex]);
-								data.meshes[data.meshCount - 1].vertices[vertex].uv[0] = uv[0];
-								data.meshes[data.meshCount - 1].vertices[vertex].uv[1] = uv[1];
+								data.meshes[meshId].vertices[vertex].uv[0] = uv[0];
+								data.meshes[meshId].vertices[vertex].uv[1] = uv[1];
 
 								FbxVector4 normal = mesh->GetElementNormal()->GetDirectArray().GetAt(vertex);
-								data.meshes[data.meshCount - 1].vertices[vertex].normal[0] = normal[0];
-								data.meshes[data.meshCount - 1].vertices[vertex].normal[1] = normal[1];
-								data.meshes[data.meshCount - 1].vertices[vertex].normal[2] = normal[2];
+								data.meshes[meshId].vertices[vertex].normal[0] = normal[0];
+								data.meshes[meshId].vertices[vertex].normal[1] = normal[1];
+								data.meshes[meshId].vertices[vertex].normal[2] = normal[2];
 							}
+							meshId++;
 						}
 					}
 				}
