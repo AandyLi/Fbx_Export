@@ -1,0 +1,34 @@
+Load:
+
+
+Position Offsets:
+
+
+#############################################
+#############  DO NOT REMOVE   ##############
+#############################################
+#############   Instructions   ##############
+#############################################
+# - Load FBX files by adding either an absolute or
+#   relative file path to a new line under "Load:".
+###
+# - Set position offsets to meshes loaded in the FBX
+#   files by adding X, Y, and Z coordinates separated
+#   with a blank space under "Position Offsets:".
+#   One offset corresponds to one file and they will
+#   be applied in order. Files with no offsets added
+#   won't be offset.
+###
+# - Mark a line as a comment by leading it with a #.
+
+#############################################
+### Example structure (ignore the "# "s): ###
+#############################################
+# Load:
+# C:\SomeFolder\file.fbx
+# fileinprojectfolder.fbx
+# D:\file2.fbx
+#
+# Position Offsets:
+# 0 0 0
+# 5 -3.21 0
