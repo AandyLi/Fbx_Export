@@ -42,13 +42,14 @@ int main() {
 						files[fileCount - 1][line.length()] = '\0';
 					}
 				}
-			}
-			if (fileCount) {
-				meshOffsets = new float*[fileCount];
-			}
-			for (int offset = 0; offset < fileCount; offset++) {
-				meshOffsets[offset] = new float[3];
-				meshOffsets[offset][0] = 0; meshOffsets[offset][1] = 0; meshOffsets[offset][2] = 0;
+				if (fileCount) {
+					meshOffsets = new float*[fileCount];
+				}
+				for (int offset = 0; offset < fileCount; offset++) {
+					meshOffsets[offset] = new float[3];
+					meshOffsets[offset][0] = 0; meshOffsets[offset][1] = 0; meshOffsets[offset][2] = 0;
+				}
+
 			}
 			if (line.substr(0, 17) == "Position Offsets:") {
 				for (int offset = 0; offset < fileCount && getline(inFile, line) && line[0] != '#' && line[0] != ' ' && line != "" && line.substr(0, 5) != "Load:"; offset++) {
@@ -168,14 +169,15 @@ int main() {
 		}
 	}
 
+	manager->Destroy();
 	for (int allocation = 0; allocation < fileCount; allocation++) {
-		delete files[allocation];
-		delete meshOffsets[allocation];
+		delete[] files[allocation];
+		delete[] meshOffsets[allocation];
 	}
 	if (fileCount) {
 		delete[] files;
 		delete[] meshOffsets;
 	}
-	manager->Destroy();
+
 	return 0;
 }
