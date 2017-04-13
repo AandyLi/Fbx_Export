@@ -7,6 +7,8 @@
 
 using namespace std;
 
+enum col {above, below, nocoll}colvar;
+
 int main() {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	//_CrtSetBreakAlloc(30547);
@@ -73,6 +75,37 @@ int main() {
 							FbxFileTexture* texture = FbxCast<FbxFileTexture>(prop.GetSrcObject<FbxFileTexture>(0));
 
 							cout << texture->GetRelativeFileName() << endl;
+							
+
+							FbxProperty pAbove = node->FindProperty("Collision_above", false);
+							FbxProperty pBelow = node->FindProperty("Collision_below", false);
+							FbxProperty pMesh = node->FindProperty("Collision_mesh", false);
+							
+							if (pAbove.IsValid()) {
+								colvar = above;
+							}
+							if (pBelow.IsValid()) {
+								colvar = below;
+							}
+							if (pMesh.IsValid()) {
+								colvar = nocoll;
+							}
+
+							switch (colvar)
+							{
+							case above:
+								cout << "Collision is above!" << endl;
+								break;
+							
+							case below:
+								cout << "Collision is below!" << endl;
+								break;
+							
+							case nocoll:
+								cout << "Collision is none!" << endl;
+								break;
+							}
+
 							
 						}
 						getchar();
