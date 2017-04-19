@@ -18,6 +18,8 @@ public:
 	// 1 - Above ground Bounding Box
 	// 2 - Below ground Bounding Box
 	// 3 - Above and Below ground Bounding Box
+	// 4 - Pressure Plate Bounding Box
+	// 5 - Lever Bounding Box
 	int customAttribute = 0;
 
 	Mesh() {}
