@@ -12,6 +12,7 @@ class Mesh {
 public:
 	Vertex* vertices;
 	int vertexCount = 0;
+	int strLength;
 	string texturePath;
 
 	// 0 - Not a Bounding Box

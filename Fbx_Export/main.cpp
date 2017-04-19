@@ -175,6 +175,34 @@ int main() {
 		}
 	}
 
+	std::ofstream os("file.gay", std::ios::binary);
+
+	os.write((char*)&data.meshCount, sizeof(int));
+
+	std::cout << data.meshCount << std::endl;
+
+	for (int i = 0; i < data.meshCount; i++)
+	{
+		os.write((char*)&data.meshes[i].vertexCount, sizeof(int));
+
+		data.meshes[i].strLength = data.meshes[i].texturePath.length();
+
+		os.write((char*)&data.meshes[i].strLength, (sizeof(int)));
+		os.write((char*)(&data.meshes[i].texturePath), data.meshes[i].strLength);
+
+		std::cout << data.meshes[i].vertexCount << std::endl;
+
+		for (int j = 0; j < data.meshes[i].vertexCount; j++)
+		{
+			os.write((char*)(&data.meshes[i].vertices[j]), sizeof(Vertex));
+		}
+	}
+	os.close();
+
+	std::cout << data.meshes[0].vertices[0].position[0];
+
+	getchar();
+
 	manager->Destroy();
 	for (int allocation = 0; allocation < fileCount; allocation++) {
 		delete[] files[allocation];
