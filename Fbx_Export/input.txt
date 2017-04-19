@@ -1,4 +1,5 @@
 Load:
+C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\cube.fbx
 
 Position Offsets:
 
