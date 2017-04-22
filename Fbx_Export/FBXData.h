@@ -13,6 +13,7 @@ public:
 	Vertex* vertices;
 	int vertexCount = 0;
 	int strLength;
+	unsigned int vertSize = 0;
 	string texturePath;
 
 	// 0 - Not a Bounding Box

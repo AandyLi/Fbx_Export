@@ -15,6 +15,7 @@ int main() {
 	FBXData data;
 	char** files;
 	int fileCount = 0;
+	std::string fileName = "";
 	float** meshOffsets;
 
 	ifstream inFile("input.txt");
@@ -25,6 +26,8 @@ int main() {
 				while (getline(inFile, line) && line.substr(0, 17) != "Position Offsets:") {
 					if (line[0] != '#' && line.substr(line.find_last_of(".") + 1, 3) == "fbx") {
 						{
+							fileName = line.substr(line.find_last_of('\\') + 1);
+							fileName.erase(4);
 							char** newA = new char*[fileCount + 1];
 							for (int file = 0; file < fileCount; file++) {
 								newA[file] = files[file];
@@ -136,6 +139,7 @@ int main() {
 							}
 							else if ((node->FindProperty("Collision", false)).IsValid()) {
 								data.meshes[meshId].customAttribute = 3;
+
 							}
 							else if ((node->FindProperty("Pressure Plate", false)).IsValid()) {
 								data.meshes[meshId].customAttribute = 4;
@@ -177,7 +181,11 @@ int main() {
 
 	if (fileCount > 0)
 	{
-		std::ofstream os("file.gay", std::ios::binary);
+		std::ofstream os(fileName + ".gay", std::ios::binary);
+
+		char temp[76];
+		std::string temp2;
+
 
 		os.write((char*)&data.meshCount, sizeof(int));
 
@@ -185,19 +193,30 @@ int main() {
 
 		for (int i = 0; i < data.meshCount; i++)
 		{
-			os.write((char*)&data.meshes[i].vertexCount, sizeof(int));
+			//Meshes
 
-			data.meshes[i].strLength = data.meshes[i].texturePath.length();
-
+			data.meshes[i].texturePath += '\0';
+			data.meshes[i].strLength = data.meshes[i].texturePath.size();
+			
 			os.write((char*)&data.meshes[i].strLength, (sizeof(int)));
-			os.write((char*)(&data.meshes[i].texturePath), data.meshes[i].strLength);
+			os.write((char*)data.meshes[i].texturePath.c_str(), data.meshes[i].strLength);
+
+			std::cout << data.meshes[i].strLength << std::endl;
+			std::cout << data.meshes[i].texturePath << std::endl;
+
+			data.meshes[i].vertSize = sizeof(Vertex) * data.meshes[i].vertexCount;
+			
+			os.write((char*)&data.meshes[i].vertexCount, sizeof(int));
+			os.write((char*)&data.meshes[i].vertSize, sizeof(int));
 
 			std::cout << data.meshes[i].vertexCount << std::endl;
+			std::cout << data.meshes[i].vertSize << std::endl;
 
-			for (int j = 0; j < data.meshes[i].vertexCount; j++)
-			{
-				os.write((char*)(&data.meshes[i].vertices[j]), sizeof(Vertex));
-			}
+			os.write((char*)(data.meshes[i].vertices), data.meshes[i].vertSize);
+
+			//Bounding Boxes
+			os.write((char*)&data.meshes[i].customAttribute, sizeof(int));
+
 		}
 
 		os.close();
@@ -216,6 +235,8 @@ int main() {
 			delete[] meshOffsets;
 		}
 	}
+
+	getchar();
 
 	return 0;
 }
