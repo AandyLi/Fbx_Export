@@ -127,21 +127,21 @@ int main() {
 						FbxMesh* mesh = node->GetMesh();
 						if (mesh->IsTriangleMesh()) {
 							data.meshes[meshId].AllocateVertices(mesh->GetPolygonVertexCount());
-
+							
 							if ((node->FindProperty("Mesh", false)).IsValid()) {
 								data.meshes[meshId].customAttribute = 0;
 							}
-							else if ((node->FindProperty("Collision Above", false)).IsValid()) {
+							else if ((node->FindProperty("Collision_Above", false)).IsValid()) {
 								data.meshes[meshId].customAttribute = 1;
 							}
-							else if ((node->FindProperty("Collision Below", false)).IsValid()) {
+							else if ((node->FindProperty("Collision_Below", false)).IsValid()) {
 								data.meshes[meshId].customAttribute = 2;
 							}
 							else if ((node->FindProperty("Collision", false)).IsValid()) {
 								data.meshes[meshId].customAttribute = 3;
 
 							}
-							else if ((node->FindProperty("Pressure Plate", false)).IsValid()) {
+							else if ((node->FindProperty("Pressure_Plate", false)).IsValid()) {
 								data.meshes[meshId].customAttribute = 4;
 							}
 							else if ((node->FindProperty("Lever", false)).IsValid()) {
