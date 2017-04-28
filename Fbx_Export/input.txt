@@ -1,5 +1,5 @@
 Load:
-C:\Users\Andreas\Documents\Visual Studio 2015\Projects\Fbx_Export\Fbx_Export\cube.fbx
+Z:\Art\Meshes\FBX\Chlv.fbx
 
 Position Offsets:
 

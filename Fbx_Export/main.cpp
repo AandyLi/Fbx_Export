@@ -118,6 +118,12 @@ int main() {
 		importer->Import(scene);
 		importer->Destroy();
 
+	
+		
+		FbxAxisSystem changeAxis(fbxsdk::FbxAxisSystem::eDirectX);
+		changeAxis.ConvertScene(scene);
+
+
 		FbxNode* rootNode = scene->GetRootNode();
 		if (rootNode) {
 			for (int child = 0; child < rootNode->GetChildCount(); child++) {
@@ -128,6 +134,7 @@ int main() {
 						if (mesh->IsTriangleMesh()) {
 							data.meshes[meshId].AllocateVertices(mesh->GetPolygonVertexCount());
 							
+							
 							if ((node->FindProperty("Mesh", false)).IsValid()) {
 								data.meshes[meshId].customAttribute = 0;
 							}
@@ -136,6 +143,8 @@ int main() {
 							}
 							else if ((node->FindProperty("Collision_Below", false)).IsValid()) {
 								data.meshes[meshId].customAttribute = 2;
+								/*auto str = node->FindProperty("Collision_Below", false).GetEnumValue(1);
+								int asdf = 23;*/
 							}
 							else if ((node->FindProperty("Collision", false)).IsValid()) {
 								data.meshes[meshId].customAttribute = 3;
@@ -151,7 +160,9 @@ int main() {
 							FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)node->GetSrcObject<FbxSurfaceMaterial>(0);
 							FbxProperty property = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
 							FbxFileTexture* texture = (FbxFileTexture*)property.GetSrcObject<FbxFileTexture>(0);
-							data.meshes[meshId].texturePath = texture->GetRelativeFileName();
+							if (texture) {
+								data.meshes[meshId].texturePath = texture->GetRelativeFileName();
+							}
 
 							FbxDouble3 meshPos = node->LclTranslation;
 							int* vertexIndices = mesh->GetPolygonVertices();
@@ -221,7 +232,7 @@ int main() {
 
 		os.close();
 
-		std::cout << data.meshes[0].vertices[0].position[0];
+		//std::cout << data.meshes[0].vertices[0].position[0];
 
 		getchar();
 
