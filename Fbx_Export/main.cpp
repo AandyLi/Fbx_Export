@@ -131,20 +131,31 @@ int main() {
 				for (int attribute = 0; attribute < node->GetNodeAttributeCount(); attribute++) {
 					if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eMesh) {
 						FbxMesh* mesh = node->GetMesh();
-						FbxProperty idProperty = node->FindProperty("id", false);
-						FbxProperty collisionProperty = node->FindProperty("Collision", false);
 						if (mesh->IsTriangleMesh()) {
 							data.meshes[meshId].AllocateVertices(mesh->GetPolygonVertexCount());
+							
+							
+							if ((node->FindProperty("Mesh", false)).IsValid()) {
+								data.meshes[meshId].customAttribute = 0;
+							}
+							else if ((node->FindProperty("Collision_Above", false)).IsValid()) {
+								data.meshes[meshId].customAttribute = 1;
+							}
+							else if ((node->FindProperty("Collision_Below", false)).IsValid()) {
+								data.meshes[meshId].customAttribute = 2;
+								/*auto str = node->FindProperty("Collision_Below", false).GetEnumValue(1);
+								int asdf = 23;*/
+							}
+							else if ((node->FindProperty("Collision", false)).IsValid()) {
+								data.meshes[meshId].customAttribute = 3;
 
-							if (idProperty.IsValid())
-							{
-								data.meshes[meshId].id = idProperty.Get<FbxInt>();
 							}
-							
-							if (collisionProperty.IsValid()) {
-								data.meshes[meshId].customAttribute = collisionProperty.Get<FbxEnum>();
+							else if ((node->FindProperty("Pressure_Plate", false)).IsValid()) {
+								data.meshes[meshId].customAttribute = 4;
 							}
-							
+							else if ((node->FindProperty("Lever", false)).IsValid()) {
+								data.meshes[meshId].customAttribute = 5;
+							}
 
 							FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)node->GetSrcObject<FbxSurfaceMaterial>(0);
 							FbxProperty property = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
@@ -216,9 +227,6 @@ int main() {
 
 			//Bounding Boxes
 			os.write((char*)&data.meshes[i].customAttribute, sizeof(int));
-
-			// id
-			os.write((char*)&data.meshes[i].id, sizeof(int));
 
 		}
 
