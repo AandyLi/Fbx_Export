@@ -23,6 +23,7 @@ public:
 	// 4 - Pressure Plate Bounding Box
 	// 5 - Lever Bounding Box
 	int customAttribute = 0;
+	int id = 0;
 
 	Mesh() {}
 	virtual ~Mesh() {
