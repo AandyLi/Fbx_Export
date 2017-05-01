@@ -214,7 +214,7 @@ int main() {
 
 			os.write((char*)(data.meshes[i].vertices), data.meshes[i].vertSize);
 
-			//Bounding Boxes
+			// Bounding Boxes
 			os.write((char*)&data.meshes[i].customAttribute, sizeof(int));
 
 			// id
