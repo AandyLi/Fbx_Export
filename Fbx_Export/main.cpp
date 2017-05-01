@@ -217,7 +217,7 @@ int main() {
 			// Bounding Boxes
 			os.write((char*)&data.meshes[i].customAttribute, sizeof(int));
 
-			// id
+			// id sdasd
 			os.write((char*)&data.meshes[i].id, sizeof(int));
 
 		}
