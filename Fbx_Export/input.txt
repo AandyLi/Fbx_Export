@@ -1,5 +1,5 @@
 Load:
-Z:\Art\Meshes\FBX\Chlv.fbx
+Z:\OBJ\test.fbx
 
 Position Offsets:
 
