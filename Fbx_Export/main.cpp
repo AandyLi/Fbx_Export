@@ -192,7 +192,7 @@ int main() {
 
 	if (fileCount > 0)
 	{
-		std::ofstream os(fileName + ".gay", std::ios::binary);
+		std::ofstream os("test.gay", std::ios::binary);
 
 		char temp[76];
 		std::string temp2;

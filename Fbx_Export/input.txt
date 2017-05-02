@@ -1,5 +1,7 @@
 Load:
-Z:\Art\Meshes\FBX\Chlv.fbx
+C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\Menu_FBX.fbx
+C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\cube.fbx
+C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\horaaaaa.fbx
 
 Position Offsets:
 
