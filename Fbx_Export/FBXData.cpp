@@ -4,7 +4,7 @@ FBXData::FBXData() {
 }
 
 FBXData::~FBXData() {
-	if (meshCount != 0) {
+	if (meshes != nullptr) {
 		delete[] meshes;
 	}
 }

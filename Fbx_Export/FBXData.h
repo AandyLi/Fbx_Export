@@ -40,7 +40,7 @@ public:
 
 class FBXData {
 public:
-	Mesh* meshes;
+	Mesh* meshes = nullptr;
 	int meshCount = 0;
 
 	FBXData();
