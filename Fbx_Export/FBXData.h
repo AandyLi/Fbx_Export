@@ -28,6 +28,7 @@ public:
 	virtual ~Mesh() {
 		if (vertexCount != 0) {
 			delete[] vertices;
+
 		}
 	}
 

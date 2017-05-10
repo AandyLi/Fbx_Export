@@ -85,6 +85,8 @@ int main() {
 			importer->Import(scene);
 			importer->Destroy();
 
+
+
 			FbxNode* rootNode = scene->GetRootNode();
 			if (rootNode) {
 				for (int child = 0; child < rootNode->GetChildCount(); child++) {
@@ -117,8 +119,6 @@ int main() {
 		FbxScene* scene = FbxScene::Create(manager, "scene");
 		importer->Import(scene);
 		importer->Destroy();
-
-	
 		
 		FbxAxisSystem changeAxis(fbxsdk::FbxAxisSystem::eDirectX);
 		changeAxis.ConvertScene(scene);
@@ -162,6 +162,7 @@ int main() {
 							FbxFileTexture* texture = (FbxFileTexture*)property.GetSrcObject<FbxFileTexture>(0);
 							if (texture) {
 								data.meshes[meshId].texturePath = texture->GetRelativeFileName();
+								data.meshes[meshId].texturePath = data.meshes[meshId].texturePath.substr(data.meshes[meshId].texturePath.find_last_of('\\') + 1);
 							}
 
 							FbxDouble3 meshPos = node->LclTranslation;
@@ -175,6 +176,7 @@ int main() {
 
 								FbxVector2 uv = mesh->GetElementUV()->GetDirectArray().GetAt(vertexIndices[vertex]);
 								data.meshes[meshId].vertices[vertex].uv[0] = uv[0];
+
 								data.meshes[meshId].vertices[vertex].uv[1] = uv[1];
 
 								FbxVector4 normal = mesh->GetElementNormal()->GetDirectArray().GetAt(vertex);
