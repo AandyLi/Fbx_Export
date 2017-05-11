@@ -23,6 +23,7 @@ public:
 	// 4 - Pressure Plate Bounding Box
 	// 5 - Lever Bounding Box
 	int customAttribute = 0;
+	int id = -1;
 
 	Mesh() {}
 	virtual ~Mesh() {
@@ -40,7 +41,7 @@ public:
 
 class FBXData {
 public:
-	Mesh* meshes;
+	Mesh* meshes = nullptr;
 	int meshCount = 0;
 
 	FBXData();

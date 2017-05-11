@@ -131,32 +131,20 @@ int main() {
 				for (int attribute = 0; attribute < node->GetNodeAttributeCount(); attribute++) {
 					if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eMesh) {
 						FbxMesh* mesh = node->GetMesh();
+						FbxProperty idProperty = node->FindProperty("id", false);
+						FbxProperty collisionProperty = node->FindProperty("Collision", false);
 						if (mesh->IsTriangleMesh()) {
 							data.meshes[meshId].AllocateVertices(mesh->GetPolygonVertexCount());
-							
-							
-							if ((node->FindProperty("Mesh", false)).IsValid()) {
-								data.meshes[meshId].customAttribute = 0;
-							}
-							else if ((node->FindProperty("Collision_Above", false)).IsValid()) {
-								data.meshes[meshId].customAttribute = 1;
-							}
-							else if ((node->FindProperty("Collision_Below", false)).IsValid()) {
-								data.meshes[meshId].customAttribute = 2;
-								/*auto str = node->FindProperty("Collision_Below", false).GetEnumValue(1);
-								int asdf = 23;*/
-							}
-							else if ((node->FindProperty("Collision", false)).IsValid()) {
-								data.meshes[meshId].customAttribute = 3;
 
+							if (idProperty.IsValid())
+							{
+								data.meshes[meshId].id = idProperty.Get<FbxInt>();
 							}
-							else if ((node->FindProperty("Pressure_Plate", false)).IsValid()) {
-								data.meshes[meshId].customAttribute = 4;
+							
+							if (collisionProperty.IsValid()) {
+								data.meshes[meshId].customAttribute = collisionProperty.Get<FbxEnum>();
 							}
-							else if ((node->FindProperty("Lever", false)).IsValid()) {
-								data.meshes[meshId].customAttribute = 5;
-							}
-
+							
 							FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)node->GetSrcObject<FbxSurfaceMaterial>(0);
 							FbxProperty property = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
 							FbxFileTexture* texture = (FbxFileTexture*)property.GetSrcObject<FbxFileTexture>(0);
@@ -168,8 +156,17 @@ int main() {
 							FbxDouble3 meshPos = node->LclTranslation;
 							int* vertexIndices = mesh->GetPolygonVertices();
 							for (int vertex = 0; vertex < mesh->GetPolygonVertexCount(); vertex++) {
+								int vertexOffset = 0;
+								if (vertex % 3 == 1) {
+									vertexOffset = 1;
+								}
+								else if (vertex % 3 == 2) {
+									vertexOffset = -1;
+								}
+
 								FbxVector4 position = mesh->GetControlPointAt(vertexIndices[vertex]);
 								position[0] += meshPos[0]; position[1] += meshPos[1]; position[2] += meshPos[2];
+<<<<<<< HEAD
 								data.meshes[meshId].vertices[vertex].position[0] = position[0] + meshOffsets[file][0];
 								data.meshes[meshId].vertices[vertex].position[1] = position[1] + meshOffsets[file][1];
 								data.meshes[meshId].vertices[vertex].position[2] = position[2] + meshOffsets[file][2];
@@ -183,6 +180,36 @@ int main() {
 								data.meshes[meshId].vertices[vertex].normal[0] = normal[0];
 								data.meshes[meshId].vertices[vertex].normal[1] = normal[1];
 								data.meshes[meshId].vertices[vertex].normal[2] = normal[2];
+=======
+								data.meshes[meshId].vertices[vertex + vertexOffset].position[0] = position[0] + meshOffsets[file][0];
+								data.meshes[meshId].vertices[vertex + vertexOffset].position[1] = position[1] + meshOffsets[file][1];
+								data.meshes[meshId].vertices[vertex + vertexOffset].position[2] = -position[2] + meshOffsets[file][2];
+							}
+
+							const char* uvSetName = mesh->GetElementUV()->GetName();
+							unsigned int polyCount = mesh->GetPolygonCount();
+							for (unsigned int poly = 0; poly < polyCount; poly++) {
+								for (unsigned int vertex = 0; vertex < 3; vertex++) {
+									unsigned int vertexOffset = 0;
+									if (vertex == 1) {
+										vertexOffset = 1;
+									}
+									else if (vertex == 2) {
+										vertexOffset = -1;
+									}
+
+									FbxVector2 uv; bool unmapped;
+									mesh->GetPolygonVertexUV(poly, vertex, uvSetName, uv, unmapped);
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[0] = uv[0];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[1] = uv[1];
+
+									FbxVector4 normal;
+									mesh->GetPolygonVertexNormal(poly, vertex, normal);
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[0] = normal[0];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[1] = normal[1];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[2] = -normal[2];
+								}
+>>>>>>> origin/master
 							}
 							meshId++;
 						}
@@ -227,8 +254,11 @@ int main() {
 
 			os.write((char*)(data.meshes[i].vertices), data.meshes[i].vertSize);
 
-			//Bounding Boxes
+			// Bounding Boxes
 			os.write((char*)&data.meshes[i].customAttribute, sizeof(int));
+
+			// id
+			os.write((char*)&data.meshes[i].id, sizeof(int));
 
 		}
 
