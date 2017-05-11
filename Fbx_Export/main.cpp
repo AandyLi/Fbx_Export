@@ -166,24 +166,22 @@ int main() {
 
 								FbxVector4 position = mesh->GetControlPointAt(vertexIndices[vertex]);
 								position[0] += meshPos[0]; position[1] += meshPos[1]; position[2] += meshPos[2];
-<<<<<<< HEAD
-								data.meshes[meshId].vertices[vertex].position[0] = position[0] + meshOffsets[file][0];
-								data.meshes[meshId].vertices[vertex].position[1] = position[1] + meshOffsets[file][1];
-								data.meshes[meshId].vertices[vertex].position[2] = position[2] + meshOffsets[file][2];
+								data.meshes[meshId].vertices[vertex].position[0] = (float)position[0] + meshOffsets[file][0];
+								data.meshes[meshId].vertices[vertex].position[1] = (float)position[1] + meshOffsets[file][1];
+								data.meshes[meshId].vertices[vertex].position[2] = (float)position[2] + meshOffsets[file][2];
 
 								FbxVector2 uv = mesh->GetElementUV()->GetDirectArray().GetAt(vertexIndices[vertex]);
-								data.meshes[meshId].vertices[vertex].uv[0] = uv[0];
+								data.meshes[meshId].vertices[vertex].uv[0] = (float)uv[0];
 
-								data.meshes[meshId].vertices[vertex].uv[1] = uv[1];
+								data.meshes[meshId].vertices[vertex].uv[1] = (float)uv[1];
 
 								FbxVector4 normal = mesh->GetElementNormal()->GetDirectArray().GetAt(vertex);
-								data.meshes[meshId].vertices[vertex].normal[0] = normal[0];
-								data.meshes[meshId].vertices[vertex].normal[1] = normal[1];
-								data.meshes[meshId].vertices[vertex].normal[2] = normal[2];
-=======
-								data.meshes[meshId].vertices[vertex + vertexOffset].position[0] = position[0] + meshOffsets[file][0];
-								data.meshes[meshId].vertices[vertex + vertexOffset].position[1] = position[1] + meshOffsets[file][1];
-								data.meshes[meshId].vertices[vertex + vertexOffset].position[2] = -position[2] + meshOffsets[file][2];
+								data.meshes[meshId].vertices[vertex].normal[0] = (float)normal[0];
+								data.meshes[meshId].vertices[vertex].normal[1] = (float)normal[1];
+								data.meshes[meshId].vertices[vertex].normal[2] = (float)normal[2];
+								data.meshes[meshId].vertices[vertex + vertexOffset].position[0] = (float)position[0] + meshOffsets[file][0];
+								data.meshes[meshId].vertices[vertex + vertexOffset].position[1] = (float)position[1] + meshOffsets[file][1];
+								data.meshes[meshId].vertices[vertex + vertexOffset].position[2] = (float)-position[2] + meshOffsets[file][2];
 							}
 
 							const char* uvSetName = mesh->GetElementUV()->GetName();
@@ -200,16 +198,15 @@ int main() {
 
 									FbxVector2 uv; bool unmapped;
 									mesh->GetPolygonVertexUV(poly, vertex, uvSetName, uv, unmapped);
-									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[0] = uv[0];
-									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[1] = uv[1];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[0] = (float)uv[0];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[1] = (float)uv[1];
 
 									FbxVector4 normal;
 									mesh->GetPolygonVertexNormal(poly, vertex, normal);
-									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[0] = normal[0];
-									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[1] = normal[1];
-									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[2] = -normal[2];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[0] = (float)normal[0];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[1] = (float)normal[1];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[2] = (float)-normal[2];
 								}
->>>>>>> origin/master
 							}
 							meshId++;
 						}
