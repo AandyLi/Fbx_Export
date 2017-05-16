@@ -7,7 +7,6 @@ struct Vertex {
 	float normal[3];
 };
 
-
 class Mesh {
 public:
 	Vertex* vertices;
@@ -29,7 +28,6 @@ public:
 	virtual ~Mesh() {
 		if (vertexCount != 0) {
 			delete[] vertices;
-
 		}
 	}
 

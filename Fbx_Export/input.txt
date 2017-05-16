@@ -1,11 +1,5 @@
 Load:
-<<<<<<< HEAD
-C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\Menu_FBX.fbx
-C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\cube.fbx
-C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\horaaaaa.fbx
-=======
 Z:\OBJ\test.fbx
->>>>>>> origin/master
 
 Position Offsets:
 

@@ -85,8 +85,6 @@ int main() {
 			importer->Import(scene);
 			importer->Destroy();
 
-
-
 			FbxNode* rootNode = scene->GetRootNode();
 			if (rootNode) {
 				for (int child = 0; child < rootNode->GetChildCount(); child++) {
@@ -119,10 +117,6 @@ int main() {
 		FbxScene* scene = FbxScene::Create(manager, "scene");
 		importer->Import(scene);
 		importer->Destroy();
-		
-		FbxAxisSystem changeAxis(fbxsdk::FbxAxisSystem::eDirectX);
-		changeAxis.ConvertScene(scene);
-
 
 		FbxNode* rootNode = scene->GetRootNode();
 		if (rootNode) {
@@ -140,11 +134,11 @@ int main() {
 							{
 								data.meshes[meshId].id = idProperty.Get<FbxInt>();
 							}
-							
+
 							if (collisionProperty.IsValid()) {
 								data.meshes[meshId].customAttribute = collisionProperty.Get<FbxEnum>();
 							}
-							
+
 							FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)node->GetSrcObject<FbxSurfaceMaterial>(0);
 							FbxProperty property = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
 							FbxFileTexture* texture = (FbxFileTexture*)property.GetSrcObject<FbxFileTexture>(0);
@@ -166,22 +160,9 @@ int main() {
 
 								FbxVector4 position = mesh->GetControlPointAt(vertexIndices[vertex]);
 								position[0] += meshPos[0]; position[1] += meshPos[1]; position[2] += meshPos[2];
-								data.meshes[meshId].vertices[vertex].position[0] = (float)position[0] + meshOffsets[file][0];
-								data.meshes[meshId].vertices[vertex].position[1] = (float)position[1] + meshOffsets[file][1];
-								data.meshes[meshId].vertices[vertex].position[2] = (float)position[2] + meshOffsets[file][2];
-
-								FbxVector2 uv = mesh->GetElementUV()->GetDirectArray().GetAt(vertexIndices[vertex]);
-								data.meshes[meshId].vertices[vertex].uv[0] = (float)uv[0];
-
-								data.meshes[meshId].vertices[vertex].uv[1] = (float)uv[1];
-
-								FbxVector4 normal = mesh->GetElementNormal()->GetDirectArray().GetAt(vertex);
-								data.meshes[meshId].vertices[vertex].normal[0] = (float)normal[0];
-								data.meshes[meshId].vertices[vertex].normal[1] = (float)normal[1];
-								data.meshes[meshId].vertices[vertex].normal[2] = (float)normal[2];
-								data.meshes[meshId].vertices[vertex + vertexOffset].position[0] = (float)position[0] + meshOffsets[file][0];
-								data.meshes[meshId].vertices[vertex + vertexOffset].position[1] = (float)position[1] + meshOffsets[file][1];
-								data.meshes[meshId].vertices[vertex + vertexOffset].position[2] = (float)-position[2] + meshOffsets[file][2];
+								data.meshes[meshId].vertices[vertex + vertexOffset].position[0] = position[0] + meshOffsets[file][0];
+								data.meshes[meshId].vertices[vertex + vertexOffset].position[1] = position[1] + meshOffsets[file][1];
+								data.meshes[meshId].vertices[vertex + vertexOffset].position[2] = -position[2] + meshOffsets[file][2];
 							}
 
 							const char* uvSetName = mesh->GetElementUV()->GetName();
@@ -198,14 +179,14 @@ int main() {
 
 									FbxVector2 uv; bool unmapped;
 									mesh->GetPolygonVertexUV(poly, vertex, uvSetName, uv, unmapped);
-									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[0] = (float)uv[0];
-									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[1] = (float)uv[1];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[0] = uv[0];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[1] = uv[1];
 
 									FbxVector4 normal;
 									mesh->GetPolygonVertexNormal(poly, vertex, normal);
-									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[0] = (float)normal[0];
-									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[1] = (float)normal[1];
-									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[2] = (float)-normal[2];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[0] = normal[0];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[1] = normal[1];
+									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[2] = -normal[2];
 								}
 							}
 							meshId++;
@@ -218,7 +199,7 @@ int main() {
 
 	if (fileCount > 0)
 	{
-		std::ofstream os("test.gay", std::ios::binary);
+		std::ofstream os(fileName + ".gay", std::ios::binary);
 
 		char temp[76];
 		std::string temp2;
@@ -234,7 +215,7 @@ int main() {
 
 			data.meshes[i].texturePath += '\0';
 			data.meshes[i].strLength = data.meshes[i].texturePath.size();
-			
+
 			os.write((char*)&data.meshes[i].strLength, (sizeof(int)));
 			os.write((char*)data.meshes[i].texturePath.c_str(), data.meshes[i].strLength);
 
@@ -242,7 +223,7 @@ int main() {
 			std::cout << data.meshes[i].texturePath << std::endl;
 
 			data.meshes[i].vertSize = sizeof(Vertex) * data.meshes[i].vertexCount;
-			
+
 			os.write((char*)&data.meshes[i].vertexCount, sizeof(int));
 			os.write((char*)&data.meshes[i].vertSize, sizeof(int));
 
