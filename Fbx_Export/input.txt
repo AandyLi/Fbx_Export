@@ -1,5 +1,5 @@
 Load:
-Z:\OBJ\test.fbx
+C:\Users\Jonah\Desktop\FBX\test_anim_exporter.fbx
 
 Position Offsets:
 

@@ -1,10 +1,52 @@
 #pragma once
 #include <string>
 using namespace std;
+
+struct Light {
+	float position[3] = { 0, 0, 0 };
+	float direction[3] = { 0, 0, 0 };
+};
+
+struct Camera {
+	float position[3] = { 0, 0, 0 };
+	float lookPosition[3] = { 0, 0, 0 };
+};
+
+class Skeleton {
+public:
+	int boneCount = 0;
+	int frameCount = 0;
+
+	float** positionFrames = nullptr;
+	float** rotationFrames = nullptr;
+
+	void AllocateBone(float animationEnd = -1) {
+		float** new_positionFrames = new float*[boneCount + 1];
+		float** new_rotationFrames = new float*[boneCount + 1];
+		for (int boneI = 0; boneI < boneCount; boneI++) {
+			new_positionFrames[boneI] = positionFrames[boneI];
+			new_rotationFrames[boneI] = rotationFrames[boneI];
+		}
+		delete[] positionFrames; delete[] rotationFrames;
+		positionFrames = new_positionFrames; rotationFrames = new_rotationFrames;
+
+		if (animationEnd != -1) {
+			frameCount = animationEnd * 60 + 1;
+		}
+
+		positionFrames[boneCount] = new float[frameCount * 3];
+		rotationFrames[boneCount] = new float[frameCount * 3];
+
+		boneCount++;
+	}
+};
+
 struct Vertex {
 	float position[3];
 	float uv[2];
 	float normal[3];
+
+	float weights[4] = { 0, 0, 0, 0 };
 };
 
 class Mesh {
@@ -42,8 +84,15 @@ public:
 	Mesh* meshes = nullptr;
 	int meshCount = 0;
 
+	Skeleton* skeletons = nullptr;
+	int skeletonCount = 0;
+
+	Camera camera;
+	Light light;
+
 	FBXData();
 	virtual ~FBXData();
 
 	void AllocateMeshes(int);
+	void AllocateSkeletons(int);
 };

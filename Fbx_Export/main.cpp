@@ -9,6 +9,33 @@
 
 using namespace std;
 
+void StoreChildJoints(FBXData& data, int skeletonId, FbxNode* parentNode) {
+	for (int child = 0; child < parentNode->GetChildCount(); child++) {
+		FbxNode* node = parentNode->GetChild(child);
+		for (int attribute = 0; attribute < node->GetNodeAttributeCount(); attribute++) {
+			if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eSkeleton) {
+				data.skeletons[skeletonId].AllocateBone();
+
+				for (unsigned int frame = 0; frame < data.skeletons[skeletonId].frameCount; frame++) {
+					FbxTime time = FbxTime(FBXSDK_TC_MILLISECOND * frame * 1000 / 60.0);
+
+					FbxDouble3 framePosition = node->LclTranslation.EvaluateValue(time, false);
+					data.skeletons[skeletonId].positionFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3] = framePosition[0];
+					data.skeletons[skeletonId].positionFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3 + 1] = framePosition[1];
+					data.skeletons[skeletonId].positionFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3 + 2] = -framePosition[2];
+
+					FbxDouble3 frameRotation = node->LclRotation.EvaluateValue(time, false);
+					data.skeletons[skeletonId].rotationFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3] = -frameRotation[0] * 0.0174533;
+					data.skeletons[skeletonId].rotationFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3 + 1] = -frameRotation[1] * 0.0174533;
+					data.skeletons[skeletonId].rotationFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3 + 2] = frameRotation[2] * 0.0174533;
+				}
+
+				StoreChildJoints(data, skeletonId, node);
+			}
+		}
+	}
+}
+
 int main() {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
@@ -70,7 +97,7 @@ int main() {
 	FbxIOSettings* ioSettings = FbxIOSettings::Create(manager, IOSROOT);
 	manager->SetIOSettings(ioSettings);
 
-	int meshCount = 0;
+	int meshCount = 0, skeletonCount = 0;
 	{
 		for (int file = 0; file < fileCount; file++) {
 			FbxImporter* importer = FbxImporter::Create(manager, "");
@@ -96,6 +123,9 @@ int main() {
 								meshCount++;
 							}
 						}
+						else if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eSkeleton) {
+							skeletonCount++;
+						}
 					}
 				}
 			}
@@ -103,8 +133,9 @@ int main() {
 	}
 
 	data.AllocateMeshes(meshCount);
+	data.AllocateSkeletons(skeletonCount);
 
-	int meshId = 0;
+	int meshId = 0, skeletonId = 0;
 	for (int file = 0; file < fileCount; file++) {
 		FbxImporter* importer = FbxImporter::Create(manager, "");
 		if (!importer->Initialize(files[file], -1, manager->GetIOSettings())) {
@@ -125,16 +156,16 @@ int main() {
 				for (int attribute = 0; attribute < node->GetNodeAttributeCount(); attribute++) {
 					if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eMesh) {
 						FbxMesh* mesh = node->GetMesh();
+
 						FbxProperty idProperty = node->FindProperty("id", false);
 						FbxProperty collisionProperty = node->FindProperty("Collision", false);
+
 						if (mesh->IsTriangleMesh()) {
 							data.meshes[meshId].AllocateVertices(mesh->GetPolygonVertexCount());
 
-							if (idProperty.IsValid())
-							{
+							if (idProperty.IsValid()) {
 								data.meshes[meshId].id = idProperty.Get<FbxInt>();
 							}
-
 							if (collisionProperty.IsValid()) {
 								data.meshes[meshId].customAttribute = collisionProperty.Get<FbxEnum>();
 							}
@@ -189,8 +220,101 @@ int main() {
 									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[2] = -normal[2];
 								}
 							}
+
+							for (int deformerI = 0; deformerI < mesh->GetDeformerCount(); deformerI++) {
+								FbxSkin* skin = (FbxSkin*)mesh->GetDeformer(deformerI, FbxDeformer::eSkin);
+
+								if (skin) {
+									for (int clusterI = 0; clusterI < skin->GetClusterCount(); clusterI++) {
+										FbxCluster& cluster = *skin->GetCluster(clusterI);
+
+										int connectedVertexCount = cluster.GetControlPointIndicesCount();
+										int* connectedVertices = cluster.GetControlPointIndices();
+										double* connectedVertexWeights = cluster.GetControlPointWeights();
+
+										for (int connectedVI = 0; connectedVI < connectedVertexCount; connectedVI++) {
+											for (int vertexI = 0; vertexI < data.meshes[meshId].vertexCount; vertexI++) {
+												if (connectedVertices[connectedVI] == vertexIndices[vertexI]) {
+													int vertexOffset = 0;
+													if (vertexI % 3 == 1) {
+														vertexOffset = 1;
+													}
+													else if (vertexI % 3 == 2) {
+														vertexOffset = -1;
+													}
+
+													for (int connectedJI = 0; connectedJI < 4; connectedJI++) {
+														if (data.meshes[meshId].vertices[vertexI + vertexOffset].weights[connectedJI] == 0) {
+															data.meshes[meshId].vertices[vertexI + vertexOffset].weights[connectedJI] = connectedVertexWeights[connectedVI];
+															break;
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+
 							meshId++;
 						}
+					}
+					else if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eSkeleton) {
+						FbxTimeSpan timeSpan; float animationStart = -1; float animationEnd = -1;
+						bool positionAnimated = node->LclTranslation.IsAnimated(); bool rotationAnimated = node->LclRotation.IsAnimated();
+
+						if (positionAnimated) {
+							node->LclTranslation.GetCurveNode()->GetAnimationInterval(timeSpan);
+							animationStart = timeSpan.GetStart().GetSecondDouble();
+							animationEnd = timeSpan.GetStop().GetSecondDouble();
+						}
+						if (rotationAnimated) {
+							node->LclRotation.GetCurveNode()->GetAnimationInterval(timeSpan);
+							if (timeSpan.GetStart().GetSecondDouble() < animationStart || animationStart == -1) {
+								animationStart = timeSpan.GetStart().GetSecondDouble();
+							}
+							if (timeSpan.GetStop().GetSecondDouble() > animationEnd || animationEnd == -1) {
+								animationEnd = timeSpan.GetStop().GetSecondDouble();
+							}
+						}
+
+						if (animationEnd) {
+							data.skeletons[skeletonId].AllocateBone(animationEnd);
+
+							for (unsigned int frame = 0; frame < (unsigned int)((animationEnd)* 60 + 1); frame++) {
+								FbxTime time = FbxTime(FBXSDK_TC_MILLISECOND * frame * 1000 / 60.0);
+
+								FbxDouble3 framePosition = node->LclTranslation.EvaluateValue(time, false);
+								data.skeletons[skeletonId].positionFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3] = framePosition[0];
+								data.skeletons[skeletonId].positionFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3 + 1] = framePosition[1];
+								data.skeletons[skeletonId].positionFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3 + 2] = -framePosition[2];
+
+								FbxDouble3 frameRotation = node->LclRotation.EvaluateValue(time, false);
+								data.skeletons[skeletonId].rotationFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3] = -frameRotation[0] * 0.0174533;
+								data.skeletons[skeletonId].rotationFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3 + 1] = -frameRotation[1] * 0.0174533;
+								data.skeletons[skeletonId].rotationFrames[data.skeletons[skeletonId].boneCount - 1][frame * 3 + 2] = frameRotation[2] * 0.0174533;
+							}
+						}
+
+						StoreChildJoints(data, skeletonId, node);
+
+						skeletonId++;
+					}
+					else if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eCamera) {
+						FbxCamera* camera = node->GetCamera();
+						FbxDouble3 position = camera->Position.Get();
+						FbxDouble3 lookPosition = camera->EvaluateLookAtPosition();
+
+						data.camera.position[0] = position[0]; data.camera.position[1] = position[1]; data.camera.position[2] = position[2];
+						data.camera.lookPosition[0] = lookPosition[0]; data.camera.lookPosition[1] = lookPosition[1]; data.camera.lookPosition[2] = lookPosition[2];
+					}
+					else if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eLight) {
+						FbxLight* light = node->GetLight();
+						FbxDouble3 position = node->LclTranslation.Get();
+						FbxDouble3 lookPosition;
+
+						//data.camera.position[0] = position[0]; data.camera.position[1] = position[1]; data.camera.position[2] = position[2];
+						//data.camera.lookPosition[0] = lookPosition[0]; data.camera.lookPosition[1] = lookPosition[1]; data.camera.lookPosition[2] = lookPosition[2];
 					}
 				}
 			}
@@ -244,8 +368,6 @@ int main() {
 
 		//std::cout << data.meshes[0].vertices[0].position[0];
 
-		getchar();
-
 		manager->Destroy();
 		for (int allocation = 0; allocation < fileCount; allocation++) {
 			delete[] files[allocation];
@@ -258,6 +380,5 @@ int main() {
 	}
 
 	getchar();
-
 	return 0;
 }
