@@ -123,6 +123,19 @@ int main() {
 								meshCount++;
 							}
 						}
+						else if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eNull) {
+							for (int childI = 0; childI < node->GetChildCount(); childI++) {
+								FbxNode* childNode = node->GetChild(childI);
+								for (int attributeI = 0; attributeI < childNode->GetNodeAttributeCount(); attributeI++) {
+									if (childNode->GetNodeAttributeByIndex(attributeI)->GetAttributeType() == FbxNodeAttribute::EType::eMesh) {
+										FbxMesh* mesh = childNode->GetMesh();
+										if (mesh->IsTriangleMesh()) {
+											meshCount++;
+										}
+									}
+								}
+							}
+						}
 						else if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eSkeleton) {
 							skeletonCount++;
 						}
@@ -135,7 +148,7 @@ int main() {
 	data.AllocateMeshes(meshCount);
 	data.AllocateSkeletons(skeletonCount);
 
-	int meshId = 0, skeletonId = 0;
+	int meshId = 0, skeletonId = 0, groupId = 0;
 	for (int file = 0; file < fileCount; file++) {
 		FbxImporter* importer = FbxImporter::Create(manager, "");
 		if (!importer->Initialize(files[file], -1, manager->GetIOSettings())) {
@@ -157,12 +170,11 @@ int main() {
 					if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eMesh) {
 						FbxMesh* mesh = node->GetMesh();
 
-						FbxProperty idProperty = node->FindProperty("id", false);
-						FbxProperty collisionProperty = node->FindProperty("Collision", false);
-
 						if (mesh->IsTriangleMesh()) {
 							data.meshes[meshId].AllocateVertices(mesh->GetPolygonVertexCount());
 
+							FbxProperty idProperty = node->FindProperty("id", false);
+							FbxProperty collisionProperty = node->FindProperty("Collision", false);
 							if (idProperty.IsValid()) {
 								data.meshes[meshId].id = idProperty.Get<FbxInt>();
 							}
@@ -305,16 +317,133 @@ int main() {
 						FbxDouble3 position = camera->Position.Get();
 						FbxDouble3 lookPosition = camera->EvaluateLookAtPosition();
 
-						data.camera.position[0] = position[0]; data.camera.position[1] = position[1]; data.camera.position[2] = position[2];
-						data.camera.lookPosition[0] = lookPosition[0]; data.camera.lookPosition[1] = lookPosition[1]; data.camera.lookPosition[2] = lookPosition[2];
+						data.camera.position[0] = position[0]; data.camera.position[1] = position[1]; data.camera.position[2] = -position[2];
+						data.camera.lookPosition[0] = lookPosition[0]; data.camera.lookPosition[1] = lookPosition[1]; data.camera.lookPosition[2] = -lookPosition[2];
 					}
 					else if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eLight) {
-						FbxLight* light = node->GetLight();
 						FbxDouble3 position = node->LclTranslation.Get();
-						FbxDouble3 lookPosition;
+						data.light.position[0] = position[0]; data.light.position[1] = position[1]; data.light.position[2] = -position[2];
+					}
+					else if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eNull) {
+						bool meshGroup = false;
+						for (int childI = 0; childI < node->GetChildCount(); childI++) {
+							FbxNode* childNode = node->GetChild(childI);
+							for (int attributeI = 0; attributeI < childNode->GetNodeAttributeCount(); attributeI++) {
+								if (childNode->GetNodeAttributeByIndex(attributeI)->GetAttributeType() == FbxNodeAttribute::EType::eMesh) {
+									FbxMesh* mesh = childNode->GetMesh();
 
-						//data.camera.position[0] = position[0]; data.camera.position[1] = position[1]; data.camera.position[2] = position[2];
-						//data.camera.lookPosition[0] = lookPosition[0]; data.camera.lookPosition[1] = lookPosition[1]; data.camera.lookPosition[2] = lookPosition[2];
+									if (mesh->IsTriangleMesh()) {
+										data.meshes[meshId].AllocateVertices(mesh->GetPolygonVertexCount());
+
+										data.meshes[meshId].group = groupId;
+										meshGroup = true;
+
+										FbxProperty idProperty = node->FindProperty("id", false);
+										FbxProperty collisionProperty = node->FindProperty("Collision", false);
+										if (idProperty.IsValid()) {
+											data.meshes[meshId].id = idProperty.Get<FbxInt>();
+										}
+										if (collisionProperty.IsValid()) {
+											data.meshes[meshId].customAttribute = collisionProperty.Get<FbxEnum>();
+										}
+
+										FbxSurfaceMaterial* material = (FbxSurfaceMaterial*)node->GetSrcObject<FbxSurfaceMaterial>(0);
+										if (material) {
+											FbxProperty property = material->FindProperty(FbxSurfaceMaterial::sDiffuse);
+											FbxFileTexture* texture = (FbxFileTexture*)property.GetSrcObject<FbxFileTexture>(0);
+											if (texture) {
+												data.meshes[meshId].texturePath = texture->GetRelativeFileName();
+												data.meshes[meshId].texturePath = data.meshes[meshId].texturePath.substr(data.meshes[meshId].texturePath.find_last_of('\\') + 1);
+											}
+										}
+
+										FbxDouble3 meshPos = node->LclTranslation;
+										int* vertexIndices = mesh->GetPolygonVertices();
+										for (int vertex = 0; vertex < mesh->GetPolygonVertexCount(); vertex++) {
+											int vertexOffset = 0;
+											if (vertex % 3 == 1) {
+												vertexOffset = 1;
+											}
+											else if (vertex % 3 == 2) {
+												vertexOffset = -1;
+											}
+
+											FbxVector4 position = mesh->GetControlPointAt(vertexIndices[vertex]);
+											position[0] += meshPos[0]; position[1] += meshPos[1]; position[2] += meshPos[2];
+											data.meshes[meshId].vertices[vertex + vertexOffset].position[0] = position[0] + meshOffsets[file][0];
+											data.meshes[meshId].vertices[vertex + vertexOffset].position[1] = position[1] + meshOffsets[file][1];
+											data.meshes[meshId].vertices[vertex + vertexOffset].position[2] = -position[2] + meshOffsets[file][2];
+										}
+
+										const char* uvSetName = mesh->GetElementUV()->GetName();
+										unsigned int polyCount = mesh->GetPolygonCount();
+										for (unsigned int poly = 0; poly < polyCount; poly++) {
+											for (unsigned int vertex = 0; vertex < 3; vertex++) {
+												unsigned int vertexOffset = 0;
+												if (vertex == 1) {
+													vertexOffset = 1;
+												}
+												else if (vertex == 2) {
+													vertexOffset = -1;
+												}
+
+												FbxVector2 uv; bool unmapped;
+												mesh->GetPolygonVertexUV(poly, vertex, uvSetName, uv, unmapped);
+												data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[0] = uv[0];
+												data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].uv[1] = uv[1];
+
+												FbxVector4 normal;
+												mesh->GetPolygonVertexNormal(poly, vertex, normal);
+												data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[0] = normal[0];
+												data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[1] = normal[1];
+												data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[2] = -normal[2];
+											}
+										}
+
+										for (int deformerI = 0; deformerI < mesh->GetDeformerCount(); deformerI++) {
+											FbxSkin* skin = (FbxSkin*)mesh->GetDeformer(deformerI, FbxDeformer::eSkin);
+
+											if (skin) {
+												for (int clusterI = 0; clusterI < skin->GetClusterCount(); clusterI++) {
+													FbxCluster& cluster = *skin->GetCluster(clusterI);
+
+													int connectedVertexCount = cluster.GetControlPointIndicesCount();
+													int* connectedVertices = cluster.GetControlPointIndices();
+													double* connectedVertexWeights = cluster.GetControlPointWeights();
+
+													for (int connectedVI = 0; connectedVI < connectedVertexCount; connectedVI++) {
+														for (int vertexI = 0; vertexI < data.meshes[meshId].vertexCount; vertexI++) {
+															if (connectedVertices[connectedVI] == vertexIndices[vertexI]) {
+																int vertexOffset = 0;
+																if (vertexI % 3 == 1) {
+																	vertexOffset = 1;
+																}
+																else if (vertexI % 3 == 2) {
+																	vertexOffset = -1;
+																}
+
+																for (int connectedJI = 0; connectedJI < 4; connectedJI++) {
+																	if (data.meshes[meshId].vertices[vertexI + vertexOffset].weights[connectedJI] == 0) {
+																		data.meshes[meshId].vertices[vertexI + vertexOffset].weights[connectedJI] = connectedVertexWeights[connectedVI];
+																		break;
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+
+										meshId++;
+									}
+								}
+							}
+						}
+
+						if (meshGroup) {
+							groupId++;
+						}
 					}
 				}
 			}

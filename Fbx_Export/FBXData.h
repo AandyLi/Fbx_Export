@@ -4,7 +4,6 @@ using namespace std;
 
 struct Light {
 	float position[3] = { 0, 0, 0 };
-	float direction[3] = { 0, 0, 0 };
 };
 
 struct Camera {
@@ -53,7 +52,7 @@ class Mesh {
 public:
 	Vertex* vertices;
 	int vertexCount = 0;
-	int strLength;
+	int strLength = 0;
 	unsigned int vertSize = 0;
 	string texturePath;
 
@@ -65,6 +64,8 @@ public:
 	// 5 - Lever Bounding Box
 	int customAttribute = 0;
 	int id = -1;
+
+	int group = -1;
 
 	Mesh() {}
 	virtual ~Mesh() {
