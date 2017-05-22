@@ -491,7 +491,24 @@ int main() {
 			// id
 			os.write((char*)&data.meshes[i].id, sizeof(int));
 
+			os.write((char*)&data.meshes[i].group, sizeof(int));
+
 		}
+
+		os.write((char*)&data.skeletonCount, sizeof(int));
+
+		for (int i = 0; i < data.skeletonCount; i++)
+		{
+			os.write((char*)&data.skeletons[i].boneCount, sizeof(int));
+			os.write((char*)&data.skeletons[i].frameCount, sizeof(int));
+
+			int size = sizeof(float) * data.skeletons[i].boneCount * data.skeletons[i].frameCount;
+			os.write((char*)&data.skeletons[i].positionFrames, size);
+			os.write((char*)&data.skeletons[i].rotationFrames, size);
+		}
+
+		os.write((char*)&data.light, sizeof(Light));
+		os.write((char*)&data.camera, sizeof(Camera));
 
 		os.close();
 
