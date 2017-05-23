@@ -22,12 +22,20 @@ int main() {
 	if (inFile.is_open()) {
 		string line;
 		while (getline(inFile, line)) {
+			if (line.substr(0, 9) == "Filename:")
+			{
+				while (getline(inFile, line) && line.substr(0, 17) != "Load:")
+				{
+					if (line[0] != '#' && line[0] != '\0' && line[0] != ' ')
+					{
+						fileName = line.substr(0);
+					}
+				}
+			}
 			if (line.substr(0, 5) == "Load:") {
 				while (getline(inFile, line) && line.substr(0, 17) != "Position Offsets:") {
 					if (line[0] != '#' && line.substr(line.find_last_of(".") + 1, 3) == "fbx") {
 						{
-							fileName = line.substr(line.find_last_of('\\') + 1);
-							fileName.erase(4);
 							char** newA = new char*[fileCount + 1];
 							for (int file = 0; file < fileCount; file++) {
 								newA[file] = files[file];
@@ -199,7 +207,7 @@ int main() {
 
 	if (fileCount > 0)
 	{
-		std::ofstream os(fileName + ".gay", std::ios::binary);
+		std::ofstream os(fileName + ".Trump", std::ios::binary);
 
 		char temp[76];
 		std::string temp2;
