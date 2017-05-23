@@ -1,5 +1,9 @@
+Filename:
+Axis
+
 Load:
-Z:\OBJ\test.fbx
+C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\Menu_FBX.fbx
+C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\AxisAlignedLevel.fbx
 
 Position Offsets:
 
@@ -24,6 +28,9 @@ Position Offsets:
 #############################################
 ### Example structure (ignore the "# "s): ###
 #############################################
+# Filename:
+# Super file
+#
 # Load:
 # C:\SomeFolder\file.fbx
 # fileinprojectfolder.fbx
