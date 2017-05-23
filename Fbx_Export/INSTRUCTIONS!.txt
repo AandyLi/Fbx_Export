@@ -1,0 +1,1 @@
+Open up input.txt, all will be found there!

@@ -1,5 +1,9 @@
+Filename:
+Axis
+
 Load:
-C:\Users\Jonah\Desktop\FBX\test_anim_exporter.fbx
+C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\Menu_FBX.fbx
+C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\AxisAlignedLevel.fbx
 
 Position Offsets:
 
@@ -20,10 +24,17 @@ Position Offsets:
 #   won't be offset.
 ###
 # - Mark a line as a comment by leading it with a #.
-
+###
+# - Run the program to extract data.
+#   NOTE: This program will merge all FBX files into a
+#   single file! Naming of the file will be added inside the program
+#   code
 #############################################
 ### Example structure (ignore the "# "s): ###
 #############################################
+# Filename: 
+# Super File
+#
 # Load:
 # C:\SomeFolder\file.fbx
 # fileinprojectfolder.fbx
