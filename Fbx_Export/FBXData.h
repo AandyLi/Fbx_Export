@@ -5,6 +5,9 @@ struct Vertex {
 	float position[3];
 	float uv[2];
 	float normal[3];
+
+	int jointIndices[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
+	float jointWeights[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 };
 
 class Mesh {

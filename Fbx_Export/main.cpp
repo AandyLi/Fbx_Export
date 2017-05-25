@@ -133,16 +133,15 @@ int main() {
 				for (int attribute = 0; attribute < node->GetNodeAttributeCount(); attribute++) {
 					if (node->GetNodeAttributeByIndex(attribute)->GetAttributeType() == FbxNodeAttribute::EType::eMesh) {
 						FbxMesh* mesh = node->GetMesh();
-						FbxProperty idProperty = node->FindProperty("id", false);
-						FbxProperty collisionProperty = node->FindProperty("Collision", false);
+
 						if (mesh->IsTriangleMesh()) {
 							data.meshes[meshId].AllocateVertices(mesh->GetPolygonVertexCount());
 
-							if (idProperty.IsValid())
-							{
+							FbxProperty idProperty = node->FindProperty("id", false);
+							FbxProperty collisionProperty = node->FindProperty("Collision", false);
+							if (idProperty.IsValid()) {
 								data.meshes[meshId].id = idProperty.Get<FbxInt>();
 							}
-
 							if (collisionProperty.IsValid()) {
 								data.meshes[meshId].customAttribute = collisionProperty.Get<FbxEnum>();
 							}
@@ -157,7 +156,7 @@ int main() {
 
 							FbxDouble3 meshPos = node->LclTranslation;
 							int* vertexIndices = mesh->GetPolygonVertices();
-							for (int vertex = 0; vertex < mesh->GetPolygonVertexCount(); vertex++) {
+							for (int vertex = 0; vertex < data.meshes[meshId].vertexCount; vertex++) {
 								int vertexOffset = 0;
 								if (vertex % 3 == 1) {
 									vertexOffset = 1;
@@ -197,6 +196,45 @@ int main() {
 									data.meshes[meshId].vertices[poly * 3 + vertex + vertexOffset].normal[2] = -normal[2];
 								}
 							}
+
+							for (int deformerI = 0; deformerI < mesh->GetDeformerCount(); deformerI++) {
+								FbxSkin* skin = (FbxSkin*)mesh->GetDeformer(deformerI, FbxDeformer::eSkin);
+
+								if (skin) {
+									int clusterCount = skin->GetClusterCount();
+
+									for (int clusterI = 0; clusterI < clusterCount; clusterI++) {
+										FbxCluster& cluster = *skin->GetCluster(clusterI);
+
+										int connectedVertexCount = cluster.GetControlPointIndicesCount();
+										int* connectedVertices = cluster.GetControlPointIndices();
+										double* connectedVertexWeights = cluster.GetControlPointWeights();
+
+										for (int connectedVI = 0; connectedVI < connectedVertexCount; connectedVI++) {
+											for (int vertexI = 0; vertexI < data.meshes[meshId].vertexCount; vertexI++) {
+												if (connectedVertices[connectedVI] == vertexIndices[vertexI]) {
+													int vertexOffset = 0;
+													if (vertexI % 3 == 1) {
+														vertexOffset = 1;
+													}
+													else if (vertexI % 3 == 2) {
+														vertexOffset = -1;
+													}
+
+													for (int connectedJI = 0; connectedJI < 8; connectedJI++) {
+														if (data.meshes[meshId].vertices[vertexI + vertexOffset].jointIndices[connectedJI] == -1) {
+															data.meshes[meshId].vertices[vertexI + vertexOffset].jointIndices[connectedJI] = clusterI;
+															data.meshes[meshId].vertices[vertexI + vertexOffset].jointWeights[connectedJI] = connectedVertexWeights[connectedVI];
+															break;
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+
 							meshId++;
 						}
 					}
@@ -220,7 +258,6 @@ int main() {
 		for (int i = 0; i < data.meshCount; i++)
 		{
 			//Meshes
-
 			data.meshes[i].texturePath += '\0';
 			data.meshes[i].strLength = data.meshes[i].texturePath.size();
 
