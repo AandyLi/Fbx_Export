@@ -245,7 +245,7 @@ int main() {
 
 	if (fileCount > 0)
 	{
-		std::ofstream os(fileName + ".Trump", std::ios::binary);
+		std::ofstream os(fileName + ".Pence", std::ios::binary);
 
 		char temp[76];
 		std::string temp2;

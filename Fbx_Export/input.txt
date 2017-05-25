@@ -2,8 +2,8 @@ Filename:
 Axis
 
 Load:
-C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\Menu_FBX.fbx
-C:\Users\Player\Documents\GitHub\Fbx_Export\Fbx_Export\AxisAlignedLevel.fbx
+C:\Users\Jonah\Documents\Visual Studio 2015\Projects\Fbx_Export\Fbx_Export\Menu_FBX.fbx
+C:\Users\Jonah\Documents\Visual Studio 2015\Projects\Fbx_Export\Fbx_Export\AxisAlignedLevel.fbx
 
 Position Offsets:
 
