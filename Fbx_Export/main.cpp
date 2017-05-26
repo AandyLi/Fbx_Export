@@ -289,8 +289,6 @@ int main() {
 
 		//std::cout << data.meshes[0].vertices[0].position[0];
 
-		getchar();
-
 		manager->Destroy();
 		for (int allocation = 0; allocation < fileCount; allocation++) {
 			delete[] files[allocation];
@@ -302,6 +300,7 @@ int main() {
 		}
 	}
 
+	std::cout << std::endl << "-- Export complete, press ENTER to close." << std::endl;
 	getchar();
 
 	return 0;
